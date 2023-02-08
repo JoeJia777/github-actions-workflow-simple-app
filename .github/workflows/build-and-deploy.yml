@@ -26,7 +26,7 @@ jobs:
         uses: Azure/docker-login@v1
         with:
           # Container registry username
-          username: 'githubactionsjoejia777'
+          username: ${{ secrets.AZURE_CONTAINER_REGISTRY_USERNAME }}
           # Container registry password
           password: ${{ secrets.AZURE_CONTAINER_REGISTRY_PASSWORD }}
           # Container registry server url
@@ -37,7 +37,7 @@ jobs:
         with:
           push: true
           # tags: <registry server url>/<app name>:<git commit sha>
-          tags: githubactionsjoejia777.azurecr.io/hello-world-app:${{ github.sha }}
+          tags: ${{ env.AZURE_CONTAINER_REGISTRY }}/hello-world-app:${{ github.sha }}
           file: ./Dockerfile
       
   deployToAKS:
@@ -57,9 +57,10 @@ jobs:
       - name: Azure login
         uses: azure/login@v1.4.6
         with:
-          client-id: '205beffb-96a5-4ee7-8c82-ab42f85f430a'
-          tenant-id: '05a141a6-f9b0-43a2-a0d0-ee2ed9348938'
-          subscription-id: '52ddba82-9f78-4f67-bc45-94f9aa09bfb4'
+          #Azure DC:app registry, give github-actions a login credential
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         
       - name: Setup kubelogin
         uses: Azure/use-kubelogin@v1
@@ -72,9 +73,9 @@ jobs:
           # Resource Group Name
           resource-group: 'github-action-rg'
           # AKS Cluster Name
-          cluster-name: 'rayk8s0802demo'
+          cluster-name: ${{ secrets.AZURE_K8SCLUSTER_NAME }}
           # AKS Cluster Subscription
-          subscription: '52ddba82-9f78-4f67-bc45-94f9aa09bfb4'
+          subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           # Get cluster admin credentials. Values: true or false
           admin: 'false'
           # Enables kubelogin for non-admin user scenario. Values: true or false
@@ -86,7 +87,7 @@ jobs:
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           CONTAINER_NAME: hello-world-app:${{ github.sha }}
-          AZURE_CONTAINER_REGISTRY: raydemo0802.azurecr.io
+          AZURE_CONTAINER_REGISTRY: ${{ env.AZURE_CONTAINER_REGISTRY }}
         with:
           # File to run substitutions on
           input: 
@@ -104,4 +105,4 @@ jobs:
             hello-world-deployment.yaml
             kubernetes/hello-world-service.yaml
           images: |
-            raydemo0802.azurecr.io/hello-world-app:${{ github.sha }}
+            ${{ env.AZURE_CONTAINER_REGISTRY }}/hello-world-app:${{ github.sha }}
